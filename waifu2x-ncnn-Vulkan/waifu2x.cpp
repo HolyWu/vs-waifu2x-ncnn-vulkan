@@ -2,6 +2,7 @@
 
 #include "waifu2x.h"
 
+#include <cstring>
 #include <algorithm>
 #include <vector>
 
@@ -189,11 +190,9 @@ int Waifu2x::process(const float* srcR, const float* srcG, const float* srcB,
         float* inG{ in.channel(1) };
         float* inB{ in.channel(2) };
         for (auto y{ 0 }; y < in.h; y++) {
-            for (auto x{ 0 }; x < in.w; x++) {
-                inR[in.w * y + x] = srcR[srcStride * (in_tile_y0 + y) + x] * 255.0f;
-                inG[in.w * y + x] = srcG[srcStride * (in_tile_y0 + y) + x] * 255.0f;
-                inB[in.w * y + x] = srcB[srcStride * (in_tile_y0 + y) + x] * 255.0f;
-            }
+            std::memcpy(inR + y * in.w, srcR + (in_tile_y0 + y) * srcStride, in.w * sizeof(float));
+            std::memcpy(inG + y * in.w, srcG + (in_tile_y0 + y) * srcStride, in.w * sizeof(float));
+            std::memcpy(inB + y * in.w, srcB + (in_tile_y0 + y) * srcStride, in.w * sizeof(float));
         }
 
         ncnn::VkCompute cmd(vkdev);
@@ -444,11 +443,9 @@ int Waifu2x::process(const float* srcR, const float* srcG, const float* srcB,
             const float* outG{ out.channel(1) };
             const float* outB{ out.channel(2) };
             for (auto y{ 0 }; y < out.h; y++) {
-                for (auto x{ 0 }; x < out.w; x++) {
-                    dstR[dstStride * (yi * scale * TILE_SIZE_Y + y) + x] = outR[out.w * y + x] * (1 / 255.0f);
-                    dstG[dstStride * (yi * scale * TILE_SIZE_Y + y) + x] = outG[out.w * y + x] * (1 / 255.0f);
-                    dstB[dstStride * (yi * scale * TILE_SIZE_Y + y) + x] = outB[out.w * y + x] * (1 / 255.0f);
-                }
+                std::memcpy(dstR + (yi * scale * TILE_SIZE_Y + y) * dstStride, outR + y * out.w, out.w * sizeof(float));
+                std::memcpy(dstG + (yi * scale * TILE_SIZE_Y + y) * dstStride, outG + y * out.w, out.w * sizeof(float));
+                std::memcpy(dstB + (yi * scale * TILE_SIZE_Y + y) * dstStride, outB + y * out.w, out.w * sizeof(float));
             }
         }
     }
