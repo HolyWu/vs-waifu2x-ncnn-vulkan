@@ -148,8 +148,8 @@ int Waifu2x::process(const float* srcR, const float* srcG, const float* srcB,
 {
     constexpr int channels = 3;
 
-    const int TILE_SIZE_X = tilesize;
-    const int TILE_SIZE_Y = tilesize;
+    const int TILE_SIZE_X = tile_w;
+    const int TILE_SIZE_Y = tile_h;
 
     ncnn::VkAllocator* blob_vkallocator = vkdev->acquire_blob_allocator();
     ncnn::VkAllocator* staging_vkallocator = vkdev->acquire_staging_allocator();

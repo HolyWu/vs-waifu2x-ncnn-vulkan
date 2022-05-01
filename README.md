@@ -5,7 +5,7 @@ ncnn implementation of waifu2x converter, based on [waifu2x-ncnn-vulkan](https:/
 
 
 ## Usage
-    w2xncnnvk.Waifu2x(vnode clip[, int noise=0, int scale=2, int tile=0, int model=2, int gpu_id=None, int gpu_thread=2, bint tta=False, bint fp32=False, bint list_gpu=False])
+    w2xncnnvk.Waifu2x(vnode clip[, int noise=0, int scale=2, int tile_w=clip.width, int tile_h=clip.height, int model=2, int gpu_id=None, int gpu_thread=2, bint tta=False, bint fp32=False, bint list_gpu=False])
 
 - clip: Clip to process. Only RGB format with float sample type of 32 bit depth is supported.
 
@@ -13,7 +13,7 @@ ncnn implementation of waifu2x converter, based on [waifu2x-ncnn-vulkan](https:/
 
 - scale: Upscale ratio (1/2).
 
-- tile: Tile size (>=32/0=auto). Use smaller value to reduce GPU memory usage. 
+- tile_w, tile_h: Tile width and height, respectively (>=32). Use smaller value to reduce GPU memory usage. 
 
 - model: Model to use.
   - 0 = upconv_7_anime_style_art_rgb

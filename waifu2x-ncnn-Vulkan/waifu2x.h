@@ -30,7 +30,8 @@ public:
     // waifu2x parameters
     int noise;
     int scale;
-    int tilesize;
+    int tile_w;
+    int tile_h;
     int prepadding;
 
 private:

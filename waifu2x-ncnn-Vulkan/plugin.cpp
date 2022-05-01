@@ -22,6 +22,7 @@
     SOFTWARE.
 */
 
+#include <algorithm>
 #include <atomic>
 #include <fstream>
 #include <memory>
@@ -114,7 +115,13 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
         if (err)
             scale = 2;
 
-        auto tile{ vsapi->mapGetIntSaturated(in, "tile", 0, &err) };
+        auto tile_w{ vsapi->mapGetIntSaturated(in, "tile_w", 0, &err) };
+        if (err)
+            tile_w = std::max(d->vi.width, 32);
+
+        auto tile_h{ vsapi->mapGetIntSaturated(in, "tile_h", 0, &err) };
+        if (err)
+            tile_h = std::max(d->vi.height, 32);
 
         auto model{ vsapi->mapGetIntSaturated(in, "model", 0, &err) };
         if (err)
@@ -137,8 +144,11 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
         if (scale < 1 || scale > 2)
             throw "scale must be 1 or 2";
 
-        if (tile != 0 && tile < 32)
-            throw "tile must be at least 32";
+        if (tile_w < 32)
+            throw "tile_w must be at least 32";
+
+        if (tile_h < 32)
+            throw "tile_h must be at least 32";
 
         if (model < 0 || model > 2)
             throw "model must be between 0 and 2 (inclusive)";
@@ -196,31 +206,6 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
         d->vi.width *= scale;
         d->vi.height *= scale;
 
-        if (tile == 0) {
-            auto heapBudget{ ncnn::get_gpu_device(gpuId)->get_heap_budget() };
-            heapBudget /= gpuThread;
-
-            if (model == 2) {
-                if (heapBudget > 2600)
-                    tile = 400;
-                else if (heapBudget > 740)
-                    tile = 200;
-                else if (heapBudget > 250)
-                    tile = 100;
-                else
-                    tile = 32;
-            } else {
-                if (heapBudget > 1900)
-                    tile = 400;
-                else if (heapBudget > 550)
-                    tile = 200;
-                else if (heapBudget > 190)
-                    tile = 100;
-                else
-                    tile = 32;
-            }
-        }
-
         std::string pluginPath{ vsapi->getPluginPath(vsapi->getPluginByID("com.holywu.waifu2x-ncnn-Vulkan", core)) };
         auto modelDir{ pluginPath.substr(0, pluginPath.rfind('/')) + "/models" };
 
@@ -237,10 +222,7 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
             break;
         case 2:
             modelDir += "/models-cunet";
-            if (noise == -1 || scale != 1)
-                prepadding = 18;
-            else
-                prepadding = 28;
+            prepadding = (noise == -1 || scale == 2) ? 18 : 28;
             break;
         }
 
@@ -278,7 +260,8 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
 
         d->waifu2x->noise = noise;
         d->waifu2x->scale = scale;
-        d->waifu2x->tilesize = tile;
+        d->waifu2x->tile_w = tile_w;
+        d->waifu2x->tile_h = tile_h;
         d->waifu2x->prepadding = prepadding;
 
         d->semaphore = std::make_unique<std::counting_semaphore<>>(gpuThread);
@@ -308,7 +291,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
                              "clip:vnode;"
                              "noise:int:opt;"
                              "scale:int:opt;"
-                             "tile:int:opt;"
+                             "tile_w:int:opt;"
+                             "tile_h:int:opt;"
                              "model:int:opt;"
                              "gpu_id:int:opt;"
                              "gpu_thread:int:opt;"
