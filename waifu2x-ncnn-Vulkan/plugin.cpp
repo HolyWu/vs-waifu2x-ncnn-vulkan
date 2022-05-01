@@ -285,7 +285,7 @@ static void VS_CC waifu2xCreate(const VSMap* in, VSMap* out, [[maybe_unused]] vo
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi) {
     vspapi->configPlugin("com.holywu.waifu2x-ncnn-Vulkan", "w2xncnnvk", "Image Super-Resolution using Deep Convolutional Neural Networks",
-                         VS_MAKE_VERSION(1, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
+                         VS_MAKE_VERSION(2, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
 
     vspapi->registerFunction("Waifu2x",
                              "clip:vnode;"
